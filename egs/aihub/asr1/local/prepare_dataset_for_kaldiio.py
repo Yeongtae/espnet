@@ -1,7 +1,9 @@
 import argparse, os, random
 def run(dPath, mpath):
-    datasetTypes = ['train','validation','test']
-    dataRange = [(0, 0.9),(0.9, 0.95),(0.95, 1.0)]
+    # datasetTypes = ['train','validation','test']
+    # dataRange = [(0, 0.9),(0.9, 0.95),(0.95, 1.0)]
+    datasetTypes = ['all']
+    dataRange = [(0, 1.0)]
 
     filePathList = None
     textList = None
@@ -11,15 +13,15 @@ def run(dPath, mpath):
         tmp = f.readlines()
         tmp2 = [t.strip().split('|') for t in tmp]
 
-        filePathList = [t[0].replace('.\wav','wav') for t in tmp2]
+        filePathList = [t[0].replace('.\wav','wav').replace('\\','/') for t in tmp2]
         textList = [t[1] for t in tmp2]
 
-    # 연산 준비작업
+    # random indexs for wave files
     numFiles = len(filePathList)
     indList = [ i for i in  range(numFiles)]
     random.shuffle(indList)
 
-    # 데이터셋 별 메타 정보 생성
+    # generate meta information
     for i, d in enumerate(datasetTypes):
         # make directorys
         targetPath = os.path.join('data',d)
@@ -30,17 +32,13 @@ def run(dPath, mpath):
         textFile = open(os.path.join(targetPath, 'text'), 'w', encoding='utf-8')
         spkidFile = open(os.path.join(targetPath, 'spkid'), 'w', encoding='utf-8')
 
-        # 데이터 비율 선택
+        # computing indexs
         sind, eind = int(dataRange[i][0]*numFiles), int(dataRange[i][1]*numFiles)
-
-        # 파일리스트 준비, 소팅
         targetIndexs = indList[sind:eind]
         targetIndexs.sort()
         #print(len(targetIndexs))
 
-        # index는? 그냥 쓰자, 그래도 디버깅 가능하자나
-
-        # 그걸로 메타 4개 만들고
+        # generating meta information
         wavscpMeta = []
         utt2spkMeta = []
         textMeta = []
@@ -53,7 +51,7 @@ def run(dPath, mpath):
             textMeta.append("{:08d} {}\n".format(ti, text))
             spkidMeta.append("{:08d} ".format(ti))
 
-        # 파일로 세이브
+        # saving meta information
         wavscpFile.writelines(wavscpMeta)
         utt2spkFile.writelines(utt2spkMeta)
         textFile.writelines(textMeta)
@@ -63,19 +61,18 @@ def run(dPath, mpath):
 
 if __name__ == '__main__':
     """
-    개발 목적
-        espnet run.sh 상 0 번 작업
-        kaldiIO 가 처리할 수 있는 데이터 포멧으로 metafile들을 준비함
-    입력
-        LJSpeech 스타일의 metadata를 포함한 dataset
+    Purpose
+        prepare metafiles for kaldiio
+    Input
+        dataset
         metadata.csv
-        ㄴ file path | text
-    출력
+        - file path | text
+    Output
         data/train,test,val
-        ㄴ wav.scp: (index) (filepath)\n
-        ㄴ utt2spk: (index) (spkid or anonymous)\n
-        ㄴ text: (index) (text)\n
-        ㄴ spk2utt: (spkid) (index)1 (index)2 .... (index)end
+        - wav.scp: (index) (filepath)\n
+        - utt2spk: (index) (spkid or anonymous)\n
+        - text: (index) (text)\n
+        - spk2utt: (spkid) (index)1 (index)2 .... (index)end
     usage
         python prepare_dataset_for_kaldiio.py -d audio/projects/rnn-transducer-old/AIhub -m audio/projects/rnn-transducer-old/AIhub/metadata.csv
     """

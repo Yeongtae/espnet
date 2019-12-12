@@ -108,7 +108,7 @@ if [ -f ${data}/segments ]; then
     utils/split_scp.pl ${data}/segments ${split_segments}
 
     ${cmd} JOB=1:${nj} ${logdir}/make_fbank_${name}.JOB.log \
-        compute-fbank-feats-myown.py \
+        compute-nvidiafbank-feats.py \
             --fs ${fs} \
             --fmax ${fmax} \
             --fmin ${fmin} \
@@ -134,7 +134,7 @@ else
   utils/split_scp.pl ${scp} ${split_scps}
 
   ${cmd} JOB=1:${nj} ${logdir}/make_fbank_${name}.JOB.log \
-      compute-fbank-feats-myown.py \
+      compute-nvidiafbank-feats.py \
           --fs ${fs} \
           --fmax ${fmax} \
           --fmin ${fmin} \

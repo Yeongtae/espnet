@@ -1,5 +1,5 @@
 # minibatch related
-batch-size: 24
+batch-size: 6
 maxlen-in: 800
 maxlen-out: 150
 

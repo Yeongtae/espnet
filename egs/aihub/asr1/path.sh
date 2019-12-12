@@ -13,7 +13,8 @@ if [ -e $MAIN_ROOT/tools/venv/etc/profile.d/conda.sh ]; then
 else
     source $MAIN_ROOT/tools/venv/bin/activate
 fi
-export PATH=$MAIN_ROOT/utils:$MAIN_ROOT/espnet/bin:$PATH
+export PATH=$MAIN_ROOT/utils:$MAIN_ROOT/espnet/bin:$MAIN_ROOT:$PATH
+export PYTHONPATH=$MAIN_ROOT:$PYTHONPATH
 
 export OMP_NUM_THREADS=1
 

@@ -5,7 +5,7 @@
 
 # general configuration
 backend=pytorch
-stage=-1       # start from -1 if you need to start from data download
+stage=0       # start from -1 if you need to start from data download
 stop_stage=100
 ngpu=1         # number of gpus ("0" uses cpu, otherwise use gpu)
 debugmode=1
@@ -19,6 +19,7 @@ lm_resume=     # Resume the LM training from snapshot
 train_set=train
 train_dev=validation
 recog_set=test
+cmd=../../../tools/venv/bin/python3.6
 
 # feature configuration
 do_delta=false
@@ -71,10 +72,11 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     ### Task dependent. You have to make data the following preparation part by yourself.
     ### But you can utilize Kaldi recipes in most cases
     echo "stage 0: Data Preparation"
-    dataset=audio/projects/rnn-transducer-old/AIhub
+    dataset=/audio/projects/rnn-transducer-old/AIhub
     metadata=${dataset}/metadata.csv
     # Initial normalization of the data
-    local/prepare_dataset_for_kaldiio.py -d ${dataset} -m ${metadata}
+    #${cmd} JOB=1 ./prepare_dataset.JOB.log local/prepare_dataset_for_kaldiio.py -d ${dataset} -m ${metadata}
+    ${cmd} local/prepare_dataset_for_kaldiio.py -d ${dataset} -m ${metadata}
 fi
 
 feat_tr_dir=${dumpdir}/${train_set}/delta${do_delta}; mkdir -p ${feat_tr_dir}
@@ -86,19 +88,19 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     fbankdir=fbank
     # Generate the fbank features; by default 80-dimensional fbanks with pitch on each frame
     ../../../utils/make_nvidiafbank.sh --cmd "$train_cmd" --nj 10 --write_utt2num_frames true \
-        data/all_${lang} exp/make_fbank/train_${lang} ${fbankdir}
-    utils/fix_data_dir.sh data/all_${lang}
+        data/all exp/make_fbank/train ${fbankdir}
+    utils/fix_data_dir.sh data/all
 
     # remove utt having more than 2000 frames or less than 10 frames or
     # remove utt having more than 200 characters or 0 characters
-    remove_longshortdata.sh data/all_${lang} data/all_trim_${lang}
+    remove_longshortdata.sh data/all data/all_trim
 
     # following split consider prompt duplication (but does not consider speaker overlap instead)
-    local/split_tr_dt_et.sh data/all_trim_${lang} data/tr_${lang} data/dt_${lang} data/et_${lang}
-    rm -r data/all_trim_${lang}
+    local/split_tr_dt_et.sh data/all_trim data/tr data/dt data/et
+    rm -r data/all_trim
 
     # compute global CMVN
-    compute-cmvn-stats scp:data/tr_${lang}/feats.scp data/tr_${lang}/cmvn.ark
+    compute-cmvn-stats scp:data/tr/feats.scp data/tr/cmvn.ark
 
     # dump features for training
     if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d ${feat_tr_dir}/storage ]; then
@@ -112,9 +114,9 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         ${feat_dt_dir}/storage
     fi
     dump.sh --cmd "$train_cmd" --nj 10 --do_delta ${do_delta} \
-        data/tr_${lang}/feats.scp data/tr_${lang}/cmvn.ark exp/dump_feats/train ${feat_tr_dir}
+        data/tr/feats.scp data/tr/cmvn.ark exp/dump_feats/train ${feat_tr_dir}
     dump.sh --cmd "$train_cmd" --nj 4 --do_delta ${do_delta} \
-        data/dt_${lang}/feats.scp data/tr_${lang}/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
+        data/dt/feats.scp data/tr/cmvn.ark exp/dump_feats/dev ${feat_dt_dir}
     for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}; mkdir -p ${feat_recog_dir}
         dump.sh --cmd "$train_cmd" --nj 4 --do_delta ${do_delta} \
@@ -123,22 +125,22 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     done
 fi
 
-dict=data/lang_1char/tr_${lang}_units.txt
+dict=data/lang_1char/tr_units.txt
 echo "dictionary: ${dict}"
 if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     ### Task dependent. You have to check non-linguistic symbols used in the corpus.
     echo "stage 2: Dictionary and Json Data Preparation"
     mkdir -p data/lang_1char/
     echo "<unk> 1" > ${dict} # <unk> must be 1, 0 will be used for "blank" in CTC
-    text2token.py -s 1 -n 1 data/tr_${lang}/text | cut -f 2- -d" " | tr " " "\n" \
+    text2token.py -s 1 -n 1 data/tr/text | cut -f 2- -d" " | tr " " "\n" \
     | sort | uniq | grep -v -e '^\s*$' | awk '{print $0 " " NR+1}' >> ${dict}
     wc -l ${dict}
 
     # make json labels
     data2json.sh --lang ${lang} --feat ${feat_tr_dir}/feats.scp \
-         data/tr_${lang} ${dict} > ${feat_tr_dir}/data.json
+         data/tr ${dict} > ${feat_tr_dir}/data.json
     data2json.sh --lang ${lang} --feat ${feat_dt_dir}/feats.scp \
-         data/dt_${lang} ${dict} > ${feat_dt_dir}/data.json
+         data/dt ${dict} > ${feat_dt_dir}/data.json
     for rtask in ${recog_set}; do
         feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}
         data2json.sh --feat ${feat_recog_dir}/feats.scp \
@@ -206,7 +208,7 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
                     | cut -f 2- -d" " > ${lmdatadir}/train.txt
                 text2token.py -s 1 -n 1 data/${train_dev}/text \
                     | cut -f 2- -d" " > ${lmdatadir}/valid.txt
-                text2token.py -s 1 -n 1 data/et_${lang}/text \
+                text2token.py -s 1 -n 1 data/et/text \
                     | cut -f 2- -d" " > ${lmdatadir}/test.txt
 
                 ${cuda_cmd} --gpu ${ngpu} ${lmexpdir}/train.log \

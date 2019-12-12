@@ -102,13 +102,13 @@ def main():
             if args.normalize is not None and args.normalize != 1:
                 array = array / (1 << (args.normalize - 1))
 
-            print('wave: ', array.max(), array.mean(), array.min(), array.shape)
+            #print('wave: ', array.max(), array.mean(), array.min(), array.shape)
 
             wave = torch.from_numpy(array).unsqueeze(0)
-            lmspc2 = fExtractor.mel_spectrogram(y=wave, isDebugging=True).squeeze_(0).transpose_(0,1)
+            lmspc2 = fExtractor.mel_spectrogram(y=wave, isDebugging=False).squeeze_(0).transpose_(0,1)
             lmspc2 = lmspc2.numpy()
             writer[utt_id] = lmspc2
-            print('lmspc2: ', lmspc2.max(), lmspc2.mean(), lmspc2.min(), lmspc2.shape)
+            #print('lmspc2: ', lmspc2.max(), lmspc2.mean(), lmspc2.min(), lmspc2.shape)
 
 
 if __name__ == "__main__":

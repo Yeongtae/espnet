@@ -28,7 +28,7 @@ decode_config=conf/decode_ctcweight1.0.yaml
 use_wordlm=true     # false means to train/use a character LM
 lm_vocabsize=100    # effective only for word LMs
 lmtag=              # tag for managing LMs
-lm_resume=          # specify a snapshot file to resume LM training
+lm_resume=          # specify a snapshot file to resume LM trainingd
 
 # decoding parameter
 recog_model=model.loss.best # set a model to be used for decoding: 'model.acc.best' or 'model.loss.best'
@@ -217,6 +217,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
         --minibatches ${N} \
         --verbose ${verbose} \
         --resume ${resume} \
+        --ctc_type builtin \
         --train-json ${feat_tr_dir}/data.json \
         --valid-json ${feat_dt_dir}/data.json
 fi
