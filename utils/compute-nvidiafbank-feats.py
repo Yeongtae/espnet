@@ -54,6 +54,8 @@ def get_parser():
                         default=None,
                         help='Give the bit depth of the PCM, '
                              'then normalizes data to scale in [-1,1]')
+    parser.add_argument('--isRandomPadding', action='store_true')
+    parser.add_argument('--totalPaddingSize', type=float, default=3.0)
     parser.add_argument('rspecifier', type=str, help='WAV scp file')
     parser.add_argument(
         '--segments', type=str,
@@ -64,7 +66,7 @@ def get_parser():
     return parser
 
 class hparams():
-    def __init__(self, n_mel_channels, sampling_rate, filter_length, hop_length, win_length, max_abs_mel_value, mel_fmin, mel_fmax):
+    def __init__(self, n_mel_channels, sampling_rate, filter_length, hop_length, win_length, max_abs_mel_value, mel_fmin, mel_fmax, isRandomPadding=False, totalPaddingSize=3.0):
         super(hparams)
         self.n_mel_channels = n_mel_channels
         self.sampling_rate = sampling_rate
@@ -74,11 +76,13 @@ class hparams():
         self.max_abs_mel_value = max_abs_mel_value
         self.mel_fmin = mel_fmin
         self.mel_fmax = mel_fmax
+        self.isRandomPadding = isRandomPadding
+        self.totalPaddingSize = totalPaddingSize
 
 def main():
     parser = get_parser()
     args = parser.parse_args()
-    stft_config = hparams(args.n_mels, args.fs, args.n_fft, args.n_shift, args.win_length, 4.0, args.fmin, args.fmax)
+    stft_config = hparams(args.n_mels, args.fs, args.n_fft, args.n_shift, args.win_length, 4.0, args.fmin, args.fmax,args.isRandomPadding,args.totalPaddingSize)
     fExtractor =TacotronSTFT(stft_config).cpu()
 
     logfmt = "%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s"
