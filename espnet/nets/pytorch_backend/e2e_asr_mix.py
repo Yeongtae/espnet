@@ -607,7 +607,7 @@ class EncoderMix(torch.nn.Module):
     """
 
     def __init__(self, etype, idim, elayers_sd, elayers_rec, eunits, eprojs,
-                 subsample, dropout, num_spkrs=2, in_channel=1):
+                 subsample, dropout, num_spkrs=2, in_channel=1, vgg_ichannels =  [64,64,128,128]):
         """Initialize the encoder of single-channel multi-speaker ASR."""
         super(EncoderMix, self).__init__()
         typ = etype.lstrip("vgg").rstrip("p")
@@ -615,7 +615,7 @@ class EncoderMix(torch.nn.Module):
             logging.error("Error: need to specify an appropriate encoder architecture")
         if etype.startswith("vgg"):
             if etype[-1] == "p":
-                self.enc_mix = torch.nn.ModuleList([VGG2L(in_channel)])
+                self.enc_mix = torch.nn.ModuleList([VGG2L(in_channel, vgg_ichannels)])
                 self.enc_sd = torch.nn.ModuleList([torch.nn.ModuleList([RNNP(get_vgg2l_odim(idim,
                                                                                             in_channel=in_channel),
                                                                              elayers_sd, eunits, eprojs,

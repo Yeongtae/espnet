@@ -10,7 +10,7 @@ sys.path.append('../../../utils')  ## espnet/utils included
 
 def main():
     ngpu='1'
-    stage=3
+    stage=0
 
     train_config='conf/tuning/transducer/train_transducer.yaml'
     decode_config='conf/tuning/transducer/decode_transducer.yaml'
@@ -20,9 +20,9 @@ def main():
     backend='pytorch'
     debugmode='1'
     verbose='0'
-    resume='./exp/nvidia_STFT_test/results/snapshot.ep.2'
+    resume=''
 
-    expname = 'nvidia_STFT_test'
+    expname = 'nvidia_STFT_aihub_org'
     #expname = 'train_pytorch_train_transducer'
 
     traindata='train'
@@ -187,6 +187,7 @@ def main():
                 '--report-wer ' + \
                 '--train-json '+dump_dir_tr+'/data.json'+' '+ \
                 '--valid-json '+dump_dir_dt+'/data.json'+' '\
+                '--vgg_ichannels 64 64 128 128 ' + \
                 '--resume ' + resume + ' '
         subprocess.call([train_cmd+train_option], shell=True)
     else:

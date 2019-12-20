@@ -150,13 +150,13 @@ class VGG2L(torch.nn.Module):
     :param int in_channel: number of input channels
     """
 
-    def __init__(self, in_channel=1):
+    def __init__(self, in_channel=1, vgg_ichannels = [64,64,128,128]):
         super(VGG2L, self).__init__()
         # CNN layer (VGG motivated)
-        self.conv1_1 = torch.nn.Conv2d(in_channel, 64, 3, stride=1, padding=1)
-        self.conv1_2 = torch.nn.Conv2d(64, 64, 3, stride=1, padding=1)
-        self.conv2_1 = torch.nn.Conv2d(64, 128, 3, stride=1, padding=1)
-        self.conv2_2 = torch.nn.Conv2d(128, 128, 3, stride=1, padding=1)
+        self.conv1_1 = torch.nn.Conv2d(in_channel, vgg_ichannels[0], 3, stride=1, padding=1)
+        self.conv1_2 = torch.nn.Conv2d(vgg_ichannels[0], vgg_ichannels[1], 3, stride=1, padding=1)
+        self.conv2_1 = torch.nn.Conv2d(vgg_ichannels[1], vgg_ichannels[2], 3, stride=1, padding=1)
+        self.conv2_2 = torch.nn.Conv2d(vgg_ichannels[2], vgg_ichannels[3], 3, stride=1, padding=1)
 
         self.in_channel = in_channel
 
@@ -213,7 +213,7 @@ class Encoder(torch.nn.Module):
     :param int in_channel: number of input channels
     """
 
-    def __init__(self, etype, idim, elayers, eunits, eprojs, subsample, dropout, in_channel=1):
+    def __init__(self, etype, idim, elayers, eunits, eprojs, subsample, dropout, in_channel=1, vgg_ichannels =  [64,64,128,128]):
         super(Encoder, self).__init__()
         typ = etype.lstrip("vgg").rstrip("p")
         if typ not in ['lstm', 'gru', 'blstm', 'bgru']:
@@ -221,13 +221,13 @@ class Encoder(torch.nn.Module):
 
         if etype.startswith("vgg"):
             if etype[-1] == "p":
-                self.enc = torch.nn.ModuleList([VGG2L(in_channel),
+                self.enc = torch.nn.ModuleList([VGG2L(in_channel, vgg_ichannels),
                                                 RNNP(get_vgg2l_odim(idim, in_channel=in_channel), elayers, eunits,
                                                      eprojs,
                                                      subsample, dropout, typ=typ)])
                 logging.info('Use CNN-VGG + ' + typ.upper() + 'P for encoder')
             else:
-                self.enc = torch.nn.ModuleList([VGG2L(in_channel),
+                self.enc = torch.nn.ModuleList([VGG2L(in_channel, vgg_ichannels),
                                                 RNN(get_vgg2l_odim(idim, in_channel=in_channel), elayers, eunits,
                                                     eprojs,
                                                     dropout, typ=typ)])
@@ -279,12 +279,12 @@ def encoder_for(args, idim, subsample):
     num_encs = getattr(args, "num_encs", 1)  # use getattr to keep compatibility
     if num_encs == 1:
         # compatible with single encoder asr mode
-        return Encoder(args.etype, idim, args.elayers, args.eunits, args.eprojs, subsample, args.dropout_rate)
+        return Encoder(args.etype, idim, args.elayers, args.eunits, args.eprojs, subsample, args.dropout_rate, args.vgg_ichannels)
     elif num_encs >= 1:
         enc_list = torch.nn.ModuleList()
         for idx in range(num_encs):
             enc = Encoder(args.etype[idx], idim[idx], args.elayers[idx], args.eunits[idx], args.eprojs, subsample[idx],
-                          args.dropout_rate[idx])
+                          args.dropout_rate[idx], args.vgg_ichannels[idx])
             enc_list.append(enc)
         return enc_list
     else:
