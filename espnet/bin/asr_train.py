@@ -262,6 +262,8 @@ def get_parser(parser=None, required=True):
                         help='')
     parser.add_argument('--fbank-fmax', type=float, default=None,
                         help='')
+    parser.add_argument('--vgg_ichannels', nargs='+', type=int, default=[64, 64, 128, 128]
+                       , help='the number sequence of intermedicate channels for vgg encoder')
     return parser
 
 

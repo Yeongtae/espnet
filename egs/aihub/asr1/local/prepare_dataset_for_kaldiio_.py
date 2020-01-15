@@ -13,8 +13,9 @@ def run(dPath, mpath):
         tmp = f.readlines()
         tmp2 = [t.strip().split('|') for t in tmp]
 
-        filePathList = [t[0].replace('.\wav','wav').replace('\\','/') for t in tmp2]
+        filePathList = [t[0].replace('.\\','').replace('./','').replace('\\','/') for t in tmp2]
         textList = [t[1] for t in tmp2]
+        spkList = [t[2].strip() for t in tmp2]
 
     # random indexs for wave files
     numFiles = len(filePathList)
@@ -34,7 +35,7 @@ def run(dPath, mpath):
 
         # computing indexs
         sind, eind = int(dataRange[i][0]*numFiles), int(dataRange[i][1]*numFiles)
-        targetIndexs = indList[sind:eind]
+        targetIndexs = indList[sind:eind][:]
         targetIndexs.sort()
         #print(len(targetIndexs))
 
@@ -42,15 +43,24 @@ def run(dPath, mpath):
         wavscpMeta = []
         utt2spkMeta = []
         textMeta = []
-        spkidMeta = ['anonymous ']
-        for ti in targetIndexs:
+        spkDic = {}
+        for i, ti in enumerate(targetIndexs):
             filePath = os.path.join(dPath, filePathList[ti])
             text = textList[ti]
-            wavscpMeta.append("{:08d} {}\n".format(ti, filePath))
-            utt2spkMeta.append("{:08d} {}\n".format(ti, 'anonymous'))
-            textMeta.append("{:08d} {}\n".format(ti, text))
-            spkidMeta.append("{:08d} ".format(ti))
+            spk = spkList[ti]
+            spkidMeta = spkDic.get(spk)
+            if(spkidMeta == None):
+                spkDic[spk] = ['{} '.format(spk)]
+                spkidMeta = spkDic.get(spk)
 
+            wavscpMeta.append("{:08d} {}\n".format(i, filePath))
+            utt2spkMeta.append("{:08d} {}\n".format(i, spk))
+            textMeta.append("{:08d} {}\n".format(i, text))
+            spkidMeta.append("{:08d} ".format(i))
+
+        spkidmetas = []
+        for k in spkDic.keys():
+            spkidmetas += spkDic.get(k)
         # saving meta information
         wavscpFile.writelines(wavscpMeta)
         utt2spkFile.writelines(utt2spkMeta)

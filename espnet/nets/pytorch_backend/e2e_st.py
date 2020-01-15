@@ -96,8 +96,6 @@ class E2E(STInterface, torch.nn.Module):
         group.add_argument('--subsample', default="1", type=str,
                            help='Subsample input frames x_y_z means subsample every x frame at 1st layer, '
                                 'every y frame at 2nd layer etc.')
-        group.add_argument('--vgg_ichannels', nargs='+', type=int, default=[64, 64, 128, 128]
-                           , help='the number sequence of intermedicate channels for vgg encoder')
         return parser
 
     @staticmethod

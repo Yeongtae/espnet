@@ -13,6 +13,7 @@ def set_path():
     if not os.environ.get("KALDI_ROOT") is None:
         print('kaldi root='+KALDI_ROOT)
         os.environ['PATH'] += os.pathsep + os.getcwd() + '/utils/'
+        os.environ['PATH'] += os.pathsep + os.getcwd() + '/steps/'
         os.environ['PATH'] += os.pathsep + KALDI_ROOT + '/tools/openfst/bin'
         os.environ['PATH'] += os.pathsep + KALDI_ROOT + '/tools/sctk/bin'
 

@@ -121,6 +121,8 @@ def get_parser():
                         help='Onset margin')
     parser.add_argument('--streaming-offset-margin', type=int, default=1,
                         help='Offset margin')
+    parser.add_argument('--vgg_ichannels', nargs='+', type=int, default=[64, 64, 128, 128]
+                        , help='the number sequence of intermedicate channels for vgg encoder')
     return parser
 
 
