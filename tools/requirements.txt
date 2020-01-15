@@ -1,0 +1,25 @@
+chainer==6.0.0 
+configargparse>=0.14.0 
+editdistance==0.5.2 
+funcsigs>=1.0.2 
+g2p_en 
+h5py==2.9.0 
+inflect>=1.0.0 
+jaconv 
+kaldiio>=2.13.8 
+librosa>=0.7.0 
+matplotlib>=3.1.0 
+museval>=0.2.1 
+nara_wpe>=0.0.5 
+nltk>=3.4.5 
+nnmnkwii 
+pillow>=6.1.0 
+pysptk>=0.1.17 
+pystoi>=0.2.2 
+pytorch_wpe@ git+https://github.com/nttcslab-sp/dnn_wpe.git 
+scipy>=1.3.0 
+sentencepiece>=0.1.82 
+soundfile>=0.10.2 
+tensorboardX>=1.8 
+torch_complex@ git+https://github.com/kamo-naoyuki/pytorch_complex.git 
+unidecode>=1.0.22 

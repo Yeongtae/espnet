@@ -222,13 +222,13 @@ class Encoder(torch.nn.Module):
         if etype.startswith("vgg"):
             if etype[-1] == "p":
                 self.enc = torch.nn.ModuleList([VGG2L(in_channel, vgg_ichannels),
-                                                RNNP(get_vgg2l_odim(idim, in_channel=in_channel), elayers, eunits,
+                                                RNNP(get_vgg2l_odim(idim, in_channel=in_channel, out_channel=vgg_ichannels[-1]), elayers, eunits,
                                                      eprojs,
                                                      subsample, dropout, typ=typ)])
                 logging.info('Use CNN-VGG + ' + typ.upper() + 'P for encoder')
             else:
                 self.enc = torch.nn.ModuleList([VGG2L(in_channel, vgg_ichannels),
-                                                RNN(get_vgg2l_odim(idim, in_channel=in_channel), elayers, eunits,
+                                                RNN(get_vgg2l_odim(idim, in_channel=in_channel, out_channel=vgg_ichannels[-1]), elayers, eunits,
                                                     eprojs,
                                                     dropout, typ=typ)])
                 logging.info('Use CNN-VGG + ' + typ.upper() + ' for encoder')
@@ -279,12 +279,12 @@ def encoder_for(args, idim, subsample):
     num_encs = getattr(args, "num_encs", 1)  # use getattr to keep compatibility
     if num_encs == 1:
         # compatible with single encoder asr mode
-        return Encoder(args.etype, idim, args.elayers, args.eunits, args.eprojs, subsample, args.dropout_rate, args.vgg_ichannels)
+        return Encoder(args.etype, idim, args.elayers, args.eunits, args.eprojs, subsample, args.dropout_rate, vgg_ichannels=args.vgg_ichannels)
     elif num_encs >= 1:
         enc_list = torch.nn.ModuleList()
         for idx in range(num_encs):
             enc = Encoder(args.etype[idx], idim[idx], args.elayers[idx], args.eunits[idx], args.eprojs, subsample[idx],
-                          args.dropout_rate[idx], args.vgg_ichannels[idx])
+                          args.dropout_rate[idx], vgg_ichannels=args.vgg_ichannels[idx])
             enc_list.append(enc)
         return enc_list
     else:
